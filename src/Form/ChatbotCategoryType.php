@@ -1,0 +1,15 @@
+<?php
+namespace Chatbot\ChatbotBundle\Form;
+
+use Chatbot\ChatbotBundle\Entity\ChatbotCategory;
+use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\FormBuilderInterface;
+
+class ChatbotCategoryType extends AbstractType
+{
+    public function buildForm(FormBuilderInterface $builder, array $options)
+    {
+        $builder->add('name', TextType::class);
+    }
+}
