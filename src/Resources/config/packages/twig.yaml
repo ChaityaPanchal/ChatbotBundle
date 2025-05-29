@@ -1,4 +1,0 @@
-twig:
-  file_name_pattern: '*.twig'
-  paths:
-    '%kernel.project_dir%/vendor/chatbot/chatbot-bundle/src/Resources/views': ChatbotBundle
