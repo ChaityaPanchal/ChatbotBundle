@@ -1,9 +1,9 @@
 <?php
-namespace Chatbot\ChatbotBundle\Controller;
+namespace Chatbot\Controller;
 
-use Chatbot\ChatbotBundle\Entity\ChatbotCategory;
-use Chatbot\ChatbotBundle\Form\ChatbotCategoryType;
-use Chatbot\ChatbotBundle\Repository\ChatbotCategoryRepository;
+use Chatbot\Entity\ChatbotCategory;
+use Chatbot\Form\ChatbotCategoryType;
+use Chatbot\Repository\ChatbotCategoryRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -11,28 +11,37 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-#[Route('chatbot/category')]
-#[IsGranted('ROLE_ADMIN')]
+#[Route('/category')]
 class ChatbotCategoryController extends AbstractController
 {
+    private ChatbotCategoryRepository $categoryRepository;
+    private EntityManagerInterface $em;
+    public function __construct(
+        ChatbotCategoryRepository $categoryRepository,
+        EntityManagerInterface $em
+    )
+    {
+        $this->categoryRepository = $categoryRepository;
+        $this->em = $em;
+    }
     #[Route('/', name: 'chatbot_category_index')]
-    public function index(ChatbotCategoryRepository $categoryRepository): Response
+    public function index(): Response
     {
         return $this->render('@Chatbot/category/index.html.twig', [
-            'categories' => $categoryRepository->findAll(),
+            'categories' => $this->categoryRepository->findAll(),
         ]);
     }
 
     #[Route('/new', name: 'chatbot_category_new')]
-    public function new(Request $request, EntityManagerInterface $em): Response
+    public function new(Request $request): Response
     {
         $category = new ChatbotCategory();
         $form = $this->createForm(ChatbotCategoryType::class, $category);
 
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
-            $em->persist($category);
-            $em->flush();
+            $this->em->persist($category);
+            $this->em->flush();
 
             return $this->redirectToRoute('chatbot_category_index');
         }
@@ -43,13 +52,13 @@ class ChatbotCategoryController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'chatbot_category_edit')]
-    public function edit(ChatbotCategory $category, Request $request, EntityManagerInterface $em): Response
+    public function edit(Request $request, ChatbotCategory $category): Response
     {
         $form = $this->createForm(ChatbotCategoryType::class, $category);
 
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
-            $em->flush();
+            $this->em->flush();
 
             return $this->redirectToRoute('chatbot_category_index');
         }
@@ -60,11 +69,17 @@ class ChatbotCategoryController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}/delete', name: 'chatbot_category_delete')]
-    public function delete(ChatbotCategory $category, EntityManagerInterface $em): Response
+    #[Route('/{id}/delete', name: 'chatbot_category_delete', methods: ['POST'])]
+    public function delete(Request $request, ChatbotCategory $category): Response
     {
-        $em->remove($category);
-        $em->flush();
+        $csrfToken = $request->request->get('_token');
+
+        if ($this->isCsrfTokenValid('delete-category' . $category->getId(), $csrfToken)) {
+            $this->em->remove($category);
+            $this->em->flush();
+        } else {
+            $this->addFlash('error', 'Invalid CSRF token.');
+        }
 
         return $this->redirectToRoute('chatbot_category_index');
     }

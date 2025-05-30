@@ -1,11 +1,11 @@
 services:
-  Chatbot\ChatbotBundle\Controller\:
+  Chatbot\Controller\:
     resource: '../../Controller'
     tags: ['controller.service_arguments']
     autowire: true
     autoconfigure: true
 
-  Chatbot\ChatbotBundle\Repository\:
+  Chatbot\Repository\:
     resource: '../../Repository'
     autowire: true
     autoconfigure: true

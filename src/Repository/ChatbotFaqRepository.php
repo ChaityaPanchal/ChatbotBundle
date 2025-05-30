@@ -1,8 +1,8 @@
 <?php
 
-namespace Chatbot\ChatbotBundle\Repository;
+namespace Chatbot\Repository;
 
-use Chatbot\ChatbotBundle\Entity\ChatbotFaq;
+use Chatbot\Entity\ChatbotFaq;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 

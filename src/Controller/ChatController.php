@@ -1,68 +1,69 @@
 <?php
 
-namespace Chatbot\ChatbotBundle\Controller;
+namespace Chatbot\Controller;
 
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Response;
-use Twig\Environment;
-use Chatbot\ChatbotBundle\Repository\ChatbotFaqRepository;
-use Chatbot\ChatbotBundle\Repository\ChatbotCategoryRepository;
+use Symfony\Component\Routing\Annotation\Route;
+use Chatbot\Repository\ChatbotFaqRepository;
+use Chatbot\Repository\ChatbotCategoryRepository;
+use Chatbot\Entity\ChatbotCategory;
 
-class ChatController
+class ChatController extends AbstractController
 {
-    #[Route('/chatbot/widget', name: 'chatbot_widget')]
-    public function widget(Environment $twig): Response
-    {
-        return new Response($twig->render('@ChatbotBundle/chatbot_widget.html.twig'));
-    }
-
-    #[Route('/chatbot/faqs', name: 'chatbot_faqs')]
-    public function getFaqs(ChatbotFaqRepository $chatbotFaqRepository): JsonResponse
-    {
-        $chatbotFaq = $chatbotFaqRepository->findAll();
-
-        $data = array_map(function ($chatbotFaq) {
-            return [
-                'id' => $chatbotFaq->getId(),
-                'question' => $chatbotFaq->getQuestion(),
-                'answer' => $chatbotFaq->getAnswer(),
-            ];
-        }, $chatbotFaq);
-
-        return new JsonResponse($data);
-    }
-
-    #[Route('/chatbot/categories', name: 'chatbot_categories')]
-    public function getCategories(ChatbotCategoryRepository $chatbotCategoryRepository): JsonResponse
-    {
-        $categories = $chatbotCategoryRepository->findAll();
-
-        $data = array_map(function ($category) {
-            return [
-                'id' => $category->getId(),
-                'name' => $category->getName(),
-            ];
-        }, $categories);
-
-        return new JsonResponse($data);
-    }
-
-    #[Route('/chatbot/faqs/{categoryId}', name: 'chatbot_faqs_by_category')]
-    public function getFaqsByCategory(
+    private ChatbotFaqRepository $chatbotFaqRepository;
+    private ChatbotCategoryRepository $chatbotCategoryRepository;
+    public function __construct(
         ChatbotFaqRepository $chatbotFaqRepository,
-        int $categoryId
-    ): JsonResponse {
-        $faqs = $chatbotFaqRepository->findBy(['category' => $categoryId]);
+        ChatbotCategoryRepository $chatbotCategoryRepository,
+    ){
+        $this->chatbotFaqRepository = $chatbotFaqRepository;
+        $this->chatbotCategoryRepository = $chatbotCategoryRepository;
+    }
+    #[Route('/widget', name: 'chatbot_widget')]
+    public function widget(): Response
+    {
+        return $this->render('@Chatbot/chatbot_widget.html.twig');
+    }
 
-        $data = array_map(function ($faq) {
-            return [
-                'id' => $faq->getId(),
-                'question' => $faq->getQuestion(),
-                'answer' => $faq->getAnswer(),
-            ];
-        }, $faqs);
+    #[Route('/faqs', name: 'chatbot_faqs')]
+    public function getFaqs(): JsonResponse
+    {
+        $chatbotFaq = $this->chatbotFaqRepository->findAll();
 
-        return new JsonResponse($data);
+        $faqList = array_map(fn($faq) => [
+            'id' => $faq->getId(),
+            'question' => $faq->getQuestion(),
+            'answer' => $faq->getAnswer(),
+        ], $chatbotFaq);
+
+        return $this->json($faqList);
+    }
+
+    #[Route('/categories', name: 'chatbot_categories')]
+    public function getCategories(): JsonResponse
+    {
+        $categories = $this->chatbotCategoryRepository->findAll();
+
+        $categoryList = array_map(fn($category) => [
+            'id' => $category->getId(),
+            'name' => $category->getName(),
+        ], $categories);
+
+        return $this->json($categoryList);
+    }
+
+    #[Route('/faqs/{category}', name: 'chatbot_faqs_by_category')]
+    public function getFaqsByCategory( ChatbotCategory $category ): JsonResponse {
+        $faqsByCategory = $category->getFaqs()->toArray();
+
+        $faqList = array_map(fn($faq) => [
+            'id' => $faq->getId(),
+            'question' => $faq->getQuestion(),
+            'answer' => $faq->getAnswer(),
+        ], $faqsByCategory);
+
+        return $this->json($faqList);
     }
 }

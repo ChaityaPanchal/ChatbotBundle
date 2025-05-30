@@ -1,38 +1,46 @@
 <?php
 
-namespace Chatbot\ChatbotBundle\Controller;
+namespace Chatbot\Controller;
 
-use Chatbot\ChatbotBundle\Entity\ChatbotFaq;
-use Chatbot\ChatbotBundle\Form\ChatbotFaqType;
-use Chatbot\ChatbotBundle\Repository\ChatbotFaqRepository;
+use Chatbot\Entity\ChatbotFaq;
+use Chatbot\Form\ChatbotFaqType;
+use Chatbot\Repository\ChatbotFaqRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-#[Route('/chatbot/faq')]
-#[IsGranted('ROLE_ADMIN')]
+#[Route('/faq')]
 class ChatbotFaqController extends AbstractController
 {
+    private ChatbotFaqRepository $chatbotFaqRepository;
+    private EntityManagerInterface $em;
+    public function __construct(
+        ChatbotFaqRepository $chatbotFaqRepository,
+        EntityManagerInterface $em
+    ){
+        $this->chatbotFaqRepository = $chatbotFaqRepository;
+        $this->em = $em;
+    }
     #[Route('/', name: 'chatbot_faq_index')]
-    public function index(ChatbotFaqRepository $faqRepository): Response
+    public function index(): Response
     {
         return $this->render('@Chatbot/faq/index.html.twig', [
-            'faqs' => $faqRepository->findAll(),
+            'faqs' => $this->chatbotFaqRepository->findAll(),
         ]);
     }
 
     #[Route('/new', name: 'chatbot_faq_new')]
-    public function new(Request $request, EntityManagerInterface $em): Response
+    public function new(Request $request): Response
     {
         $faq = new ChatbotFaq();
         $form = $this->createForm(ChatbotFaqType::class, $faq);
 
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
-            $em->persist($faq);
-            $em->flush();
+            $this->em->persist($faq);
+            $this->em->flush();
 
             return $this->redirectToRoute('chatbot_faq_index');
         }
@@ -44,13 +52,13 @@ class ChatbotFaqController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'chatbot_faq_edit')]
-    public function edit(ChatbotFaq $faq, Request $request, EntityManagerInterface $em): Response
+    public function edit(ChatbotFaq $faq, Request $request): Response
     {
         $form = $this->createForm(ChatbotFaqType::class, $faq);
 
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
-            $em->flush();
+            $this->em->flush();
 
             return $this->redirectToRoute('chatbot_faq_index');
         }
@@ -62,10 +70,16 @@ class ChatbotFaqController extends AbstractController
     }
 
     #[Route('/{id}/delete', name: 'chatbot_faq_delete')]
-    public function delete(ChatbotFaq $faq, EntityManagerInterface $em): Response
+    public function delete(Request $request, ChatbotFaq $faq): Response
     {
-        $em->remove($faq);
-        $em->flush();
+        $csrfToken = $request->request->get('_token');
+
+        if ($this->isCsrfTokenValid('delete-faq' . $faq->getId(), $csrfToken)) {
+            $this->em->remove($faq);
+            $this->em->flush();
+        } else {
+            $this->addFlash('error', 'Invalid CSRF token.');
+        }
 
         return $this->redirectToRoute('chatbot_faq_index');
     }

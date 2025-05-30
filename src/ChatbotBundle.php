@@ -1,12 +1,11 @@
 <?php
 
-namespace Chatbot\ChatbotBundle;
+namespace Chatbot;
 
+use Symfony\Component\HttpKernel\Bundle\Bundle;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\ExtensionInterface;
-use Symfony\Component\HttpKernel\Bundle\Bundle;
-use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
-use Symfony\Component\Config\FileLocator;
+use Chatbot\DependencyInjection\ChatbotExtension;
 
 class ChatbotBundle extends Bundle
 {
@@ -15,13 +14,12 @@ class ChatbotBundle extends Bundle
         parent::build($container);
     }
 
-    public function boot(): void
+    public function getContainerExtension(): ExtensionInterface
     {
-        // No-op or custom logic if needed
-    }
+        if (null === $this->extension) {
+            $this->extension = new ChatbotExtension();
+        }
 
-    public function getContainerExtension(): ?ExtensionInterface
-    {
-        return new DependencyInjection\ChatbotExtension();
+        return $this->extension;
     }
 }

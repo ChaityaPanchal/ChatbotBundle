@@ -1,6 +1,6 @@
 <?php
 
-namespace Chatbot\ChatbotBundle\DependencyInjection;
+namespace Chatbot\DependencyInjection;
 
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -23,12 +23,20 @@ class ChatbotExtension extends Extension
                             'is_bundle' => true,
                             'type' => 'attribute', // or 'annotation' if using annotations
                             'dir' => 'Entity',
-                            'prefix' => 'Chatbot\\ChatbotBundle\\Entity',
+                            'prefix' => 'Chatbot\\Entity',
                             'alias' => 'ChatbotBundle',
                         ],
                     ],
                 ],
             ]);
         }
+    }
+    public function prepend(ContainerBuilder $container): void
+    {
+        $container->prependExtensionConfig('twig', [
+            'paths' => [
+                __DIR__ . '/../Resources/views' => 'ChatbotBundle',
+            ],
+        ]);
     }
 }

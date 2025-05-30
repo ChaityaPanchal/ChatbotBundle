@@ -1,9 +1,10 @@
 <?php
-namespace Chatbot\ChatbotBundle\Entity;
+namespace Chatbot\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Chatbot\Repository\ChatbotFaqRepository;
 
-#[ORM\Entity(repositoryClass: 'Chatbot\ChatbotBundle\Repository\ChatbotFaqRepository')]
+#[ORM\Entity(repositoryClass: ChatbotFaqRepository::class)]
 class ChatbotFaq
 {
     #[ORM\Id]

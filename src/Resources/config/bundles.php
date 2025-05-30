@@ -1,4 +1,4 @@
 <?php
 return [
-    Chatbot\ChatbotBundle\ChatbotBundle::class => ['all' => true],
+    Chatbot\ChatbotBundle::class => ['all' => true],
 ];

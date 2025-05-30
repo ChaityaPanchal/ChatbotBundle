@@ -1,11 +1,12 @@
 <?php
-namespace Chatbot\ChatbotBundle\Entity;
+namespace Chatbot\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Chatbot\Repository\ChatbotCategoryRepository;
 
-#[ORM\Entity(repositoryClass: 'Chatbot\ChatbotBundle\Repository\ChatbotCategoryRepository')]
+#[ORM\Entity(repositoryClass: ChatbotCategoryRepository::class)]
 class ChatbotCategory
 {
     #[ORM\Id]

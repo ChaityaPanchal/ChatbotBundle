@@ -1,8 +1,7 @@
 <?php
-namespace Chatbot\ChatbotBundle\Form;
+namespace Chatbot\Form;
 
-use Chatbot\ChatbotBundle\Entity\ChatbotFaq;
-use Chatbot\ChatbotBundle\Entity\ChatbotCategory;
+use Chatbot\Entity\ChatbotCategory;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
