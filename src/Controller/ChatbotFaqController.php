@@ -16,16 +16,20 @@ class ChatbotFaqController extends AbstractController
 {
     private ChatbotFaqRepository $chatbotFaqRepository;
     private EntityManagerInterface $em;
+    private string $requiredRole;
     public function __construct(
         ChatbotFaqRepository $chatbotFaqRepository,
-        EntityManagerInterface $em
+        EntityManagerInterface $em,
+        string $requiredRole
     ){
         $this->chatbotFaqRepository = $chatbotFaqRepository;
         $this->em = $em;
+        $this->requiredRole = $requiredRole;
     }
     #[Route('/', name: 'chatbot_faq_index')]
     public function index(): Response
     {
+        $this->denyAccessUnlessGranted($this->requiredRole);
         return $this->render('@Chatbot/faq/index.html.twig', [
             'faqs' => $this->chatbotFaqRepository->findAll(),
         ]);
@@ -34,6 +38,7 @@ class ChatbotFaqController extends AbstractController
     #[Route('/new', name: 'chatbot_faq_new')]
     public function new(Request $request): Response
     {
+        $this->denyAccessUnlessGranted($this->requiredRole);
         $faq = new ChatbotFaq();
         $form = $this->createForm(ChatbotFaqType::class, $faq);
 
@@ -54,6 +59,7 @@ class ChatbotFaqController extends AbstractController
     #[Route('/{id}/edit', name: 'chatbot_faq_edit')]
     public function edit(ChatbotFaq $faq, Request $request): Response
     {
+        $this->denyAccessUnlessGranted($this->requiredRole);
         $form = $this->createForm(ChatbotFaqType::class, $faq);
 
         $form->handleRequest($request);
@@ -72,6 +78,7 @@ class ChatbotFaqController extends AbstractController
     #[Route('/{id}/delete', name: 'chatbot_faq_delete')]
     public function delete(Request $request, ChatbotFaq $faq): Response
     {
+        $this->denyAccessUnlessGranted($this->requiredRole);
         $csrfToken = $request->request->get('_token');
 
         if ($this->isCsrfTokenValid('delete-faq' . $faq->getId(), $csrfToken)) {

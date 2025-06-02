@@ -21,7 +21,7 @@ A Symfony bundle that provides a menu-based chatbot widget with category managem
 Install the chatbot bundle using Composer:
 
 ```bash
-composer require chatbot/chatbot-bundle
+composer require patel/chatbot-bundle
 ```
 
 
@@ -96,10 +96,26 @@ Example:
 </body>
 </html>
 ```
+### Step 6:  Add Chatbot Routes
+Add the following to your config/routes.yaml:
 
-
+```twig
+chatbot_bundle:
+    resource: '@ChatbotBundle/Controller/'
+    type: attribute
+    prefix: /chatbot
+```
+### Step 7: Add Configuration File
+Create config/packages/chatbot.yaml to configure role permissions:
+```twig
+chatbot:
+  category_role: ROLE_SUPER_ADMIN
+  faq_role: ROLE_USER
+```
 
 ---
+
+
 
 ## Usage
 
@@ -137,11 +153,12 @@ Once configured, users will see:
 To customize the templates for the Category and FAQ pages:
 
 1. **Locate the Original Templates**:
-   
+
     The original templates are located within the bundle at:
 
     * `vendor/chatbot/chatbot-bundle/src/Resources/views/category`
     * `vendor/chatbot/chatbot-bundle/src/Resources/views/faq/`
+
 
 2. **Create Override Directories**:
    
@@ -149,6 +166,7 @@ To customize the templates for the Category and FAQ pages:
 
     * `templates/bundles/ChatbotBundle/category/`
     * `templates/bundles/ChatbotBundle/faq/`
+
 
 3. **Copy and Modify Templates**:
    Copy the templates you wish to customize from the bundle into the corresponding override directories in your project. For example:
@@ -205,6 +223,45 @@ The bundle creates two main database tables:
 
 * `chatbot_category` - Stores category information
 * `chatbot_faq` - Stores FAQ items with category relationships
+
+---
+
+## 🔄 Chatbot Bundle Flow
+
+This section provides a visual guide and step-by-step explanation of how the Chatbot bundle works, including category/FAQ management and user interaction through the chatbot widget.
+
+### 1. 📂 Category Management (CRUD)
+Admins can add, edit, or delete categories for organizing FAQ items.
+
+![Category CRUD](docs/category_crud.png)
+
+---
+
+### 2. ❓ FAQ Management (CRUD)
+Admins can manage frequently asked questions and assign them to categories.
+
+![FAQ CRUD](docs/faq_crud.png)
+
+---
+
+### 3. 🤖 Chatbot Icon on Website
+Users see a floating chatbot icon at the bottom-right corner of the page.
+
+![Chatbot Icon](docs/chatbot_icon.png)
+
+---
+
+### 4. 📁 Show All Categories
+Clicking the chatbot shows all available categories.
+
+![Show Categories](docs/show_categories.png)
+
+---
+
+### 5. ❓ Show FAQs for Selected Category
+Clicking a category reveals the relevant FAQ items.
+
+![Show FAQs](docs/category_faqs.png)
 
 ---
 

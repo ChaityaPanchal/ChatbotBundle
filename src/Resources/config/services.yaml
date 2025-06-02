@@ -9,3 +9,19 @@ services:
     resource: '../../Repository'
     autowire: true
     autoconfigure: true
+
+  Chatbot\Controller\ChatbotCategoryController:
+    arguments:
+      $requiredRole: '%chatbot.roles.category%'
+    tags: [ 'controller.service_arguments' ]
+    public: true
+    autowire: true
+    autoconfigure: true
+
+  Chatbot\Controller\ChatbotFaqController:
+    arguments:
+      $requiredRole: '%chatbot.roles.faq%'
+    tags: [ 'controller.service_arguments' ]
+    public: true
+    autowire: true
+    autoconfigure: true

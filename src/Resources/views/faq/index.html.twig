@@ -1,4 +1,4 @@
-{% extends 'base.html.twig' %}
+{% extends '@Chatbot/base.html.twig' %}
 
 {% block title %}FAQs{% endblock %}
 
@@ -64,9 +64,6 @@
         </table>
         {% else %}
         <div class="empty-state">
-            <i class="fas fa-question-circle"></i>
-            <h3>No FAQs Found</h3>
-            <p>Start by creating your first FAQ entry</p>
             <div class="empty-state">
                 <i class="fas fa-question-circle"></i>
                 <h3>No FAQs Found</h3>

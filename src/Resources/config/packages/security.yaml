@@ -1,3 +1,0 @@
-access_control:
-  - { path: ^/chatbot/category, roles: ROLE_ADMIN }
-  - { path: ^/chatbot/faq, roles: ROLE_ADMIN }

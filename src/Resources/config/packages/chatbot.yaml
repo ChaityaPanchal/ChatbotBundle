@@ -1,0 +1,4 @@
+# config/packages/chatbot.yaml
+chatbot:
+  category_role: ROLE_CHATBOT_ADMIN
+  faq_role: ROLE_CHATBOT_ADMIN

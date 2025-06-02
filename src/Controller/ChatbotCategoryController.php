@@ -16,17 +16,21 @@ class ChatbotCategoryController extends AbstractController
 {
     private ChatbotCategoryRepository $categoryRepository;
     private EntityManagerInterface $em;
+    private string $requiredRole;
     public function __construct(
         ChatbotCategoryRepository $categoryRepository,
-        EntityManagerInterface $em
+        EntityManagerInterface $em,
+        string $requiredRole
     )
     {
         $this->categoryRepository = $categoryRepository;
         $this->em = $em;
+        $this->requiredRole = $requiredRole;
     }
     #[Route('/', name: 'chatbot_category_index')]
     public function index(): Response
     {
+        $this->denyAccessUnlessGranted($this->requiredRole);
         return $this->render('@Chatbot/category/index.html.twig', [
             'categories' => $this->categoryRepository->findAll(),
         ]);
@@ -35,6 +39,7 @@ class ChatbotCategoryController extends AbstractController
     #[Route('/new', name: 'chatbot_category_new')]
     public function new(Request $request): Response
     {
+        $this->denyAccessUnlessGranted($this->requiredRole);
         $category = new ChatbotCategory();
         $form = $this->createForm(ChatbotCategoryType::class, $category);
 
@@ -54,6 +59,7 @@ class ChatbotCategoryController extends AbstractController
     #[Route('/{id}/edit', name: 'chatbot_category_edit')]
     public function edit(Request $request, ChatbotCategory $category): Response
     {
+        $this->denyAccessUnlessGranted($this->requiredRole);
         $form = $this->createForm(ChatbotCategoryType::class, $category);
 
         $form->handleRequest($request);
@@ -72,6 +78,7 @@ class ChatbotCategoryController extends AbstractController
     #[Route('/{id}/delete', name: 'chatbot_category_delete', methods: ['POST'])]
     public function delete(Request $request, ChatbotCategory $category): Response
     {
+        $this->denyAccessUnlessGranted($this->requiredRole);
         $csrfToken = $request->request->get('_token');
 
         if ($this->isCsrfTokenValid('delete-category' . $category->getId(), $csrfToken)) {
