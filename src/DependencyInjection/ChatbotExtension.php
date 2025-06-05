@@ -19,8 +19,7 @@ class ChatbotExtension extends Extension
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
 
-        $container->setParameter('chatbot.roles.category', $config['category_role']);
-        $container->setParameter('chatbot.roles.faq', $config['faq_role']);
+        $container->setParameter('chatbot.role', $config['role']);
 
         // Register Doctrine mapping so your entity is recognized
         if ($container->hasExtension('doctrine')) {

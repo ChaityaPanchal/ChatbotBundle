@@ -5,11 +5,14 @@ namespace Chatbot\Controller;
 use Chatbot\Entity\ChatbotFaq;
 use Chatbot\Form\ChatbotFaqType;
 use Chatbot\Repository\ChatbotFaqRepository;
+use Chatbot\Repository\ChatbotUserQuestionRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Email;
 
 #[Route('/faq')]
 class ChatbotFaqController extends AbstractController
@@ -17,14 +20,21 @@ class ChatbotFaqController extends AbstractController
     private ChatbotFaqRepository $chatbotFaqRepository;
     private EntityManagerInterface $em;
     private string $requiredRole;
+    private ChatbotUserQuestionRepository $chatbotUserQuestionRepository;
+    private MailerInterface $mailer;
+
     public function __construct(
         ChatbotFaqRepository $chatbotFaqRepository,
         EntityManagerInterface $em,
-        string $requiredRole
+        string $requiredRole,
+        ChatbotUserQuestionRepository $chatbotUserQuestionRepository,
+        MailerInterface $mailer
     ){
         $this->chatbotFaqRepository = $chatbotFaqRepository;
         $this->em = $em;
         $this->requiredRole = $requiredRole;
+        $this->chatbotUserQuestionRepository = $chatbotUserQuestionRepository;
+        $this->mailer = $mailer;
     }
     #[Route('/', name: 'chatbot_faq_index')]
     public function index(): Response
@@ -35,17 +45,56 @@ class ChatbotFaqController extends AbstractController
         ]);
     }
 
-    #[Route('/new', name: 'chatbot_faq_new')]
+    #[Route('/new', name: 'chatbot_faq_new', methods: ['GET', 'POST'])]
     public function new(Request $request): Response
     {
         $this->denyAccessUnlessGranted($this->requiredRole);
         $faq = new ChatbotFaq();
+
+        // Prefill question if provided via query parameter
+        $prefillQuestion = $request->query->get('question');
+        $userQuestionId = $request->query->get('userQuestionId');
+
+        if ($prefillQuestion) {
+            $faq->setQuestion($prefillQuestion);
+        }
+
         $form = $this->createForm(ChatbotFaqType::class, $faq);
 
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
             $this->em->persist($faq);
             $this->em->flush();
+
+            // Remove user question if userQuestionId passed
+            if ($userQuestionId) {
+                $userQuestion = $this->em->find(\App\Entity\UserQuestion::class, $userQuestionId);
+                $user = $userQuestion->getUser();
+                if ($userQuestion) {
+                    $this->em->remove($userQuestion);
+                    $this->em->flush();
+
+                    // Send email to the user
+                    if ($user && method_exists($user, 'getEmail')) {
+                        $email = (new Email())
+                            ->from('noreply@example.com')
+                            ->to($user->getEmail())
+                            ->subject('We’ve added your question to our FAQ')
+                            ->html(sprintf(
+                                '<p>Hi %s,</p><p>We’ve added your question to our FAQ section. Thank you for your contribution!</p>',
+                                htmlspecialchars($user->getFirstname() ?? 'there')
+                            ));
+
+                        $this->mailer->send($email);
+                    }
+
+                    $this->addFlash('success', 'FAQ created successfully and user question has been removed.');
+                } else {
+                    $this->addFlash('success', 'FAQ created successfully.');
+                }
+            } else {
+                $this->addFlash('success', 'FAQ created successfully.');
+            }
 
             return $this->redirectToRoute('chatbot_faq_index');
         }

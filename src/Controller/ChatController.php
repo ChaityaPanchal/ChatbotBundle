@@ -9,17 +9,33 @@ use Symfony\Component\Routing\Annotation\Route;
 use Chatbot\Repository\ChatbotFaqRepository;
 use Chatbot\Repository\ChatbotCategoryRepository;
 use Chatbot\Entity\ChatbotCategory;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\Request;
+use App\Entity\UserQuestion;
 
 class ChatController extends AbstractController
 {
     private ChatbotFaqRepository $chatbotFaqRepository;
     private ChatbotCategoryRepository $chatbotCategoryRepository;
+    private EntityManagerInterface $em;
+    private string $requiredRole;
     public function __construct(
         ChatbotFaqRepository $chatbotFaqRepository,
         ChatbotCategoryRepository $chatbotCategoryRepository,
+        EntityManagerInterface $em,
+        string $requiredRole,
     ){
         $this->chatbotFaqRepository = $chatbotFaqRepository;
         $this->chatbotCategoryRepository = $chatbotCategoryRepository;
+        $this->em = $em;
+        $this->requiredRole = $requiredRole;
+    }
+
+    #[Route('/', name: 'chatbot')]
+    public function index(): Response
+    {
+        $this->denyAccessUnlessGranted($this->requiredRole);
+        return $this->render('@Chatbot/index.html.twig');
     }
     #[Route('/widget', name: 'chatbot_widget')]
     public function widget(): Response
@@ -65,5 +81,39 @@ class ChatController extends AbstractController
         ], $faqsByCategory);
 
         return $this->json($faqList);
+    }
+
+    #[Route('/submit-user-question', name: 'chatbot_submit_user_question', methods: ['POST'])]
+    public function submitUserQuestion(Request $request): JsonResponse
+    {
+        try {
+            $data = json_decode($request->getContent(), true);
+
+            $questionText = trim($data['question'] ?? '');
+            if (empty($questionText)) {
+                return new JsonResponse(['error' => 'Question is required'], 400);
+            }
+
+            $user = $this->getUser();
+            if (!$user instanceof \Chatbot\Security\ChatbotUserInterface) {
+                return new JsonResponse(['error' => 'Invalid user'], 403);
+            }
+            $userQuestion = new UserQuestion();
+            $userQuestion->setQuestionText($questionText);
+            $userQuestion->setUser($user);
+
+            $this->em->persist($userQuestion);
+            $this->em->flush();
+
+            return new JsonResponse([
+                'success' => true,
+                'message' => 'Question submitted successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'error' => 'Failed to submit question: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

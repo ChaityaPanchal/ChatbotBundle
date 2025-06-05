@@ -12,16 +12,13 @@
         <div class="header header-wide">
             <div class="header-content">
                 <div class="header-left">
-                    <h1><i class="fas fa-robot"></i> Chatbot Categories</h1>
+                    <h1><i class="fas fa-robot"></i> Categories</h1>
                     <p>Manage and organize your chatbot categories with ease</p>
                     <a href="{{ path('chatbot_category_new') }}" class="add-btn">
                         <i class="fas fa-plus"></i>
                         Add New Category
                     </a>
-                </div>
-                <div class="stats-card">
-                    <div class="stats-number">{{ categories|length }}</div>
-                    <div class="stats-label">Total Categories</div>
+                    <a href="{{ path('chatbot') }}" class="add-btn">Back</a>
                 </div>
             </div>
         </div>

@@ -1,5 +1,7 @@
 services:
   Chatbot\Controller\:
+    arguments:
+      $requiredRole: '%chatbot.role%'
     resource: '../../Controller'
     tags: ['controller.service_arguments']
     autowire: true
@@ -12,7 +14,7 @@ services:
 
   Chatbot\Controller\ChatbotCategoryController:
     arguments:
-      $requiredRole: '%chatbot.roles.category%'
+      $requiredRole: '%chatbot.role%'
     tags: [ 'controller.service_arguments' ]
     public: true
     autowire: true
@@ -20,7 +22,7 @@ services:
 
   Chatbot\Controller\ChatbotFaqController:
     arguments:
-      $requiredRole: '%chatbot.roles.faq%'
+      $requiredRole: '%chatbot.role%'
     tags: [ 'controller.service_arguments' ]
     public: true
     autowire: true

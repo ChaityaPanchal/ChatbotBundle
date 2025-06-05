@@ -12,8 +12,7 @@ class Configuration implements ConfigurationInterface
 
         $treeBuilder->getRootNode()
             ->children()
-            ->scalarNode('category_role')->defaultValue('ROLE_CHATBOT_ADMIN')->end()
-            ->scalarNode('faq_role')->defaultValue('ROLE_CHATBOT_ADMIN')->end()
+            ->scalarNode('role')->defaultValue('ROLE_CHATBOT_ADMIN')->end()
             ->end();
 
         return $treeBuilder;

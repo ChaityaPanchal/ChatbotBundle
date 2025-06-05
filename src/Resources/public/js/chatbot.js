@@ -133,6 +133,58 @@ document.addEventListener('DOMContentLoaded', () => {
             #chatbot-conversation::-webkit-scrollbar-track { background: #f1f5f9; }
             #chatbot-conversation::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
             #chatbot-conversation::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+            
+            .question-input-container {
+                background: white;
+                border: 2px solid #e5e7eb;
+                border-radius: 12px;
+                padding: 16px;
+                margin: 12px 0;
+                transition: border-color 0.2s ease;
+            }
+            .question-input-container:focus-within {
+                border-color: #667eea;
+                box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            }
+            .question-textarea {
+                width: 100%;
+                border: none;
+                outline: none;
+                resize: vertical;
+                min-height: 60px;
+                font-size: 14px;
+                font-family: inherit;
+                color: #374151;
+                background: transparent;
+            }
+            .question-textarea::placeholder {
+                color: #9ca3af;
+            }
+            .submit-question-btn {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: 500;
+                margin-top: 10px;
+                transition: all 0.2s ease;
+                width: 100%;
+            }
+            .submit-question-btn:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            }
+            .submit-question-btn:active {
+                transform: translateY(0);
+            }
+            .submit-question-btn:disabled {
+                opacity: 0.6;
+                cursor: not-allowed;
+                transform: none;
+            }
         `;
         document.head.appendChild(style);
 
@@ -153,15 +205,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const closeButton = document.getElementById('chatbot-close');
         closeButton.addEventListener('click', () => {
             closeChatWindow(chatWindow);
-        });
-
-        // Close on outside click
-        document.addEventListener('click', (e) => {
-            if (!chatWindow.contains(e.target) && !document.getElementById('chatbot-button').contains(e.target)) {
-                if (chatWindow.style.opacity === '1') {
-                    closeChatWindow(chatWindow);
-                }
-            }
         });
     }
 
@@ -219,7 +262,6 @@ document.addEventListener('DOMContentLoaded', () => {
         messageBubble.innerHTML = content;
         messageDiv.appendChild(messageBubble);
         conversation.appendChild(messageDiv);
-
         if (animate) {
             setTimeout(() => {
                 messageDiv.style.opacity = '1';
@@ -238,6 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
         buttonsContainer.style.cssText = `
             margin-bottom: 16px;
             opacity: 0;
+            transition: opacity 0.3s ease-in-out;
         `;
 
         buttons.forEach(button => {
@@ -296,6 +339,106 @@ document.addEventListener('DOMContentLoaded', () => {
         scrollToBottom();
     }
 
+    function addQuestionInput() {
+        const conversation = document.getElementById('chatbot-conversation');
+        if (!conversation) return;
+
+        const inputContainer = document.createElement('div');
+        inputContainer.style.cssText = `
+            margin-bottom: 16px;
+            opacity: 0;
+        `;
+
+        inputContainer.innerHTML = `
+            <div class="question-input-container">
+                <textarea 
+                    class="question-textarea" 
+                    placeholder="Type your question here..."
+                    maxlength="500"
+                ></textarea>
+                <button class="submit-question-btn" type="button">
+                    Submit Question
+                </button>
+            </div>
+        `;
+
+        const textarea = inputContainer.querySelector('.question-textarea');
+        const submitBtn = inputContainer.querySelector('.submit-question-btn');
+
+        // Auto-resize textarea
+        textarea.addEventListener('input', () => {
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + 'px';
+
+            // Enable/disable submit button
+            submitBtn.disabled = textarea.value.trim().length === 0;
+        });
+
+        // Submit question
+        submitBtn.addEventListener('click', () => {
+            const question = textarea.value.trim();
+            if (question) {
+                handleUserQuestion(question);
+                inputContainer.remove();
+            }
+        });
+
+        // Submit on Enter (Ctrl+Enter for new line)
+        textarea.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
+                e.preventDefault();
+                if (textarea.value.trim()) {
+                    submitBtn.click();
+                }
+            }
+        });
+
+        conversation.appendChild(inputContainer);
+
+        setTimeout(() => {
+            inputContainer.style.opacity = '1';
+            inputContainer.classList.add('message-animation');
+            textarea.focus();
+        }, 100);
+
+        scrollToBottom();
+    }
+
+    async function handleUserQuestion(question) {
+        // Show user's question
+        addMessage(question, true);
+
+        try {
+            // showLoading(true);
+            // Submit question to server
+            const response = await fetch('/chatbot/submit-user-question', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ question: question })
+            });
+
+            // showLoading(false);
+
+            if (response.ok) {
+                addMessage(`
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                        <span style="font-size: 16px;">✅</span>
+                        <strong>Thank you for your question!</strong>
+                    </div>
+                    <div>We've received your question and our team will review it. We'll try to provide an answer as soon as possible and add it to our FAQ section.</div>
+                `);
+            } else {
+                throw new Error('Failed to submit question');
+            }
+        } catch (error) {
+            showLoading(false);
+            showError("Sorry, we couldn't submit your question. Please try again later.");
+        }
+    }
+
     function scrollToBottom() {
         const conversation = document.getElementById('chatbot-conversation');
         if (conversation) {
@@ -339,7 +482,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span style="font-size: 20px;">👋</span>
                     <strong>Hello! I'm here to help</strong>
                 </div>
-                <div>Please choose a category to get started:</div>
+                <div>Please choose a category to get started, or ask your own question:</div>
             `);
 
             loadCategories();
@@ -361,6 +504,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 type: 'category'
             }));
 
+            // Add "Ask your question" option
+            categoryButtons.push({
+                text: "❓ Ask your own question",
+                type: 'ask_question'
+            });
+
             addInteractiveButtons(categoryButtons, handleCategorySelection);
 
         } catch (error) {
@@ -372,10 +521,18 @@ document.addEventListener('DOMContentLoaded', () => {
         // Show user selection
         addMessage(category.text, true);
 
-        // Show loading and then load FAQs
-        setTimeout(() => {
-            loadFaqs(category.id, category.text);
-        }, 300);
+        if (category.type === 'ask_question') {
+            // Show question input
+            setTimeout(() => {
+                addMessage("Please type your question below:");
+                addQuestionInput();
+            }, 300);
+        } else {
+            // Show loading and then load FAQs
+            setTimeout(() => {
+                loadFaqs(category.id, category.text);
+            }, 300);
+        }
     }
 
     async function loadFaqs(categoryId, categoryName) {
@@ -418,12 +575,15 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 const actionButtons = [
                     { text: "🔙 Back to categories", type: 'back_to_categories' },
-                    { text: "❓ Ask another question", type: 'back_to_categories' }
+                    { text: "❓ Ask another question", type: 'ask_question' }
                 ];
 
                 addInteractiveButtons(actionButtons, (action) => {
                     if (action.type === 'back_to_categories') {
                         resetChatbot();
+                    } else if (action.type === 'ask_question') {
+                        addMessage("Please type your question below:", false);
+                        addQuestionInput();
                     }
                 });
             }, 800);
@@ -432,11 +592,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function addBackToCategories() {
         const backButtons = [
-            { text: "🔙 Back to categories", type: 'back_to_categories' }
+            { text: "🔙 Back to categories", type: 'back_to_categories' },
+            { text: "❓ Ask your own question", type: 'ask_question' }
         ];
 
-        addInteractiveButtons(backButtons, () => {
-            resetChatbot();
+        addInteractiveButtons(backButtons, (action) => {
+            if (action.type === 'back_to_categories') {
+                resetChatbot();
+            } else if (action.type === 'ask_question') {
+                addMessage("Please type your question below:", false);
+                addQuestionInput();
+            }
         });
     }
 
