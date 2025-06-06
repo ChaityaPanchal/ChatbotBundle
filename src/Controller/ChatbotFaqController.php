@@ -16,22 +16,13 @@ use App\Entity\UserQuestion;
 #[Route('/faq')]
 class ChatbotFaqController extends AbstractController
 {
-    private ChatbotFaqRepository $chatbotFaqRepository;
-    private EntityManagerInterface $em;
-    private string $requiredRole;
-    private MailerInterface $mailer;
-
     public function __construct(
-        ChatbotFaqRepository $chatbotFaqRepository,
-        EntityManagerInterface $em,
-        string $requiredRole,
-        MailerInterface $mailer
-    ){
-        $this->chatbotFaqRepository = $chatbotFaqRepository;
-        $this->em = $em;
-        $this->requiredRole = $requiredRole;
-        $this->mailer = $mailer;
-    }
+        private ChatbotFaqRepository $chatbotFaqRepository,
+        private EntityManagerInterface $em,
+        private string $requiredRole,
+        private MailerInterface $mailer
+    ){}
+
     #[Route('/', name: 'chatbot_faq_index')]
     public function index(): Response
     {
@@ -123,10 +114,10 @@ class ChatbotFaqController extends AbstractController
     public function delete(Request $request, ChatbotFaq $faq): Response
     {
         $this->denyAccessUnlessGranted($this->requiredRole);
-        $csrfToken = $request->request->get('_token');
+        $csrfToken = $request->request->get('token');
 
-        if ($this->isCsrfTokenValid('delete-faq' . $faq->getId(), $csrfToken)) {
-            $this->em->remove($faq);
+        if ($this->isCsrfTokenValid('delete-item', $csrfToken)) {
+                $this->em->remove($faq);
             $this->em->flush();
         } else {
             $this->addFlash('error', 'Invalid CSRF token.');

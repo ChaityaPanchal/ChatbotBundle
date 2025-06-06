@@ -14,19 +14,13 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[Route('/category')]
 class ChatbotCategoryController extends AbstractController
 {
-    private ChatbotCategoryRepository $categoryRepository;
-    private EntityManagerInterface $em;
-    private string $requiredRole;
     public function __construct(
-        ChatbotCategoryRepository $categoryRepository,
-        EntityManagerInterface $em,
-        string $requiredRole
+        private ChatbotCategoryRepository $categoryRepository,
+        private EntityManagerInterface $em,
+        private string $requiredRole
     )
-    {
-        $this->categoryRepository = $categoryRepository;
-        $this->em = $em;
-        $this->requiredRole = $requiredRole;
-    }
+    {}
+
     #[Route('/', name: 'chatbot_category_index')]
     public function index(): Response
     {
@@ -79,9 +73,9 @@ class ChatbotCategoryController extends AbstractController
     public function delete(Request $request, ChatbotCategory $category): Response
     {
         $this->denyAccessUnlessGranted($this->requiredRole);
-        $csrfToken = $request->request->get('_token');
+        $csrfToken = $request->request->get('token');
 
-        if ($this->isCsrfTokenValid('delete-category' . $category->getId(), $csrfToken)) {
+        if ($this->isCsrfTokenValid('delete-item', $csrfToken)) {
             $this->em->remove($category);
             $this->em->flush();
         } else {

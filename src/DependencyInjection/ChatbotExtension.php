@@ -20,6 +20,7 @@ class ChatbotExtension extends Extension
         $config = $this->processConfiguration($configuration, $configs);
 
         $container->setParameter('chatbot.role', $config['role']);
+        $container->setParameter('chatbot.user_question_entity', $config['user_question_entity']);
 
         // Register Doctrine mapping so your entity is recognized
         if ($container->hasExtension('doctrine')) {
@@ -28,7 +29,7 @@ class ChatbotExtension extends Extension
                     'mappings' => [
                         'ChatbotBundle' => [
                             'is_bundle' => true,
-                            'type' => 'attribute', // or 'annotation' if using annotations
+                            'type' => 'attribute',
                             'dir' => 'Entity',
                             'prefix' => 'Chatbot\\Entity',
                             'alias' => 'ChatbotBundle',

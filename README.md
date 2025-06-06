@@ -72,23 +72,29 @@ Add the following to `config/routes.yaml`:
 
 ```yaml
 chatbot_bundle:
-    resource: '@ChatbotBundle/Controller/'
-    type: attribute
-    prefix: /chatbot
+  resource: '@ChatbotBundle/Resources/config/routes.yaml'
 ```
 
-### Step 7: Add Configuration
+### Step 7: Add in your services.yaml
+
+```yaml
+Chatbot\Repository\UserQuestionRepositoryInterface: '@App\Repository\UserQuestionRepository'
+```
+
+### Step 8: Add Configuration
 
 Create the file `config/packages/chatbot.yaml`:
+Create the file config/packages/chatbot.yaml and set the user_question_entity parameter to the fully qualified namespace of your user question entity class.
 
 ```yaml
 chatbot:
     role: ROLE_CHATBOT_ADMIN
+    user_question_entity: App\Entity\UserQuestion
 ```
 
 ---
 
-### Step 8: User-Submitted Questions
+### Step 9: User-Submitted Questions
 
 Users can submit their own questions through the chatbot. Admins can respond and choose to publish them in the FAQ. Users receive email notifications when their question is answered.
 

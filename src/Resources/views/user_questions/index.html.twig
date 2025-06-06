@@ -203,7 +203,7 @@
                                   action="{{ path('chatbot_user_question_delete', {id: question.id}) }}"
                                   class="delete-form"
                                   onsubmit="return confirm('Are you sure you want to delete this question?');">
-                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ question.id) }}">
+                                <input type="hidden" name="token" value="{{ csrf_token('delete-item') }}">
                                 <button type="submit" class="btn btn-delete">
                                     🗑️ Delete
                                 </button>

@@ -16,21 +16,13 @@ use Chatbot\Security\ChatbotUserInterface;
 
 class ChatController extends AbstractController
 {
-    private ChatbotFaqRepository $chatbotFaqRepository;
-    private ChatbotCategoryRepository $chatbotCategoryRepository;
-    private EntityManagerInterface $em;
-    private string $requiredRole;
     public function __construct(
-        ChatbotFaqRepository $chatbotFaqRepository,
-        ChatbotCategoryRepository $chatbotCategoryRepository,
-        EntityManagerInterface $em,
-        string $requiredRole,
-    ){
-        $this->chatbotFaqRepository = $chatbotFaqRepository;
-        $this->chatbotCategoryRepository = $chatbotCategoryRepository;
-        $this->em = $em;
-        $this->requiredRole = $requiredRole;
-    }
+        private ChatbotFaqRepository $chatbotFaqRepository,
+        private ChatbotCategoryRepository $chatbotCategoryRepository,
+        private EntityManagerInterface $em,
+        private string $requiredRole,
+        private string $userQuestionEntityClass,
+    ){}
 
     #[Route('/', name: 'chatbot')]
     public function index(): Response
@@ -38,6 +30,7 @@ class ChatController extends AbstractController
         $this->denyAccessUnlessGranted($this->requiredRole);
         return $this->render('@Chatbot/index.html.twig');
     }
+
     #[Route('/widget', name: 'chatbot_widget')]
     public function widget(): Response
     {
@@ -105,7 +98,8 @@ class ChatController extends AbstractController
             if (!$user instanceof ChatbotUserInterface) {
                 return new JsonResponse(['error' => 'Invalid user'], 403);
             }
-            $userQuestion = new UserQuestion();
+            $userQuestionEntityClass = $this->userQuestionEntityClass;
+            $userQuestion = new $userQuestionEntityClass();
             $userQuestion->setQuestionText($questionText);
             $userQuestion->setUser($user);
 
