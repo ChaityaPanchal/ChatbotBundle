@@ -12,6 +12,7 @@ use Chatbot\Entity\ChatbotCategory;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use App\Entity\UserQuestion;
+use Chatbot\Security\ChatbotUserInterface;
 
 class ChatController extends AbstractController
 {
@@ -46,6 +47,8 @@ class ChatController extends AbstractController
     #[Route('/faqs', name: 'chatbot_faqs')]
     public function getFaqs(): JsonResponse
     {
+        $this->denyAccessUnlessGranted($this->requiredRole);
+
         $chatbotFaq = $this->chatbotFaqRepository->findAll();
 
         $faqList = array_map(fn($faq) => [
@@ -60,6 +63,8 @@ class ChatController extends AbstractController
     #[Route('/categories', name: 'chatbot_categories')]
     public function getCategories(): JsonResponse
     {
+        $this->denyAccessUnlessGranted($this->requiredRole);
+
         $categories = $this->chatbotCategoryRepository->findAll();
 
         $categoryList = array_map(fn($category) => [
@@ -72,6 +77,8 @@ class ChatController extends AbstractController
 
     #[Route('/faqs/{category}', name: 'chatbot_faqs_by_category')]
     public function getFaqsByCategory( ChatbotCategory $category ): JsonResponse {
+        $this->denyAccessUnlessGranted($this->requiredRole);
+
         $faqsByCategory = $category->getFaqs()->toArray();
 
         $faqList = array_map(fn($faq) => [
@@ -95,7 +102,7 @@ class ChatController extends AbstractController
             }
 
             $user = $this->getUser();
-            if (!$user instanceof \Chatbot\Security\ChatbotUserInterface) {
+            if (!$user instanceof ChatbotUserInterface) {
                 return new JsonResponse(['error' => 'Invalid user'], 403);
             }
             $userQuestion = new UserQuestion();

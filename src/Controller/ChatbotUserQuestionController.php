@@ -10,6 +10,8 @@ use App\Entity\UserQuestion;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Chatbot\Security\ChatbotUserInterface;
+use Symfony\Component\Security\Csrf\CsrfToken;
+use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 class ChatbotUserQuestionController extends AbstractController
 {
@@ -33,8 +35,15 @@ class ChatbotUserQuestionController extends AbstractController
     }
 
     #[Route('/{id}/delete', name: 'chatbot_user_question_delete')]
-    public function delete(UserQuestion $question): Response
+    public function delete(Request $request, UserQuestion $question, CsrfTokenManagerInterface $csrfTokenManager): Response
     {
+        $this->denyAccessUnlessGranted($this->requiredRole);
+        $submittedToken = $request->request->get('_token');
+
+        if (!$csrfTokenManager->isTokenValid(new CsrfToken('delete' . $question->getId(), $submittedToken))) {
+            throw $this->createAccessDeniedException('Invalid CSRF token');
+        }
+
         $this->em->remove($question);
         $this->em->flush();
         $this->addFlash('success', 'Question deleted.');

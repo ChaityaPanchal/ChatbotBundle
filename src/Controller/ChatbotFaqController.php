@@ -12,7 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
-
+use App\Entity\UserQuestion;
 #[Route('/faq')]
 class ChatbotFaqController extends AbstractController
 {
@@ -64,7 +64,7 @@ class ChatbotFaqController extends AbstractController
 
             // Remove user question if userQuestionId passed
             if ($userQuestionId) {
-                $userQuestion = $this->em->find(\App\Entity\UserQuestion::class, $userQuestionId);
+                $userQuestion = $this->em->find(UserQuestion::class, $userQuestionId);
                 $user = $userQuestion->getUser();
                 if ($userQuestion) {
                     $this->em->remove($userQuestion);
