@@ -1,3 +1,6 @@
+
+---
+
 # Chatbot Bundle
 
 A Symfony bundle that provides a menu-based chatbot widget with category management and FAQ functionality. The chatbot appears as a floating button on the right side of your website and allows users to browse categories and get answers to frequently asked questions.
@@ -9,7 +12,7 @@ A Symfony bundle that provides a menu-based chatbot widget with category managem
 * 🤖 Interactive chatbot widget
 * 📁 Category management system
 * ❓ FAQ management with category-wise organization
-* 🎨 Design with floating button interface
+* 🎨 Floating button interface design
 * 🔧 Easy integration with existing Symfony projects
 
 ---
@@ -24,244 +27,224 @@ Install the chatbot bundle using Composer:
 composer require patel/chatbot-bundle
 ```
 
-
-
 ### Step 2: Register the Bundle
 
 Add the bundle to your `config/bundles.php` file:
 
 ```php
-<?php
-
 return [
     // ... other bundles
     Chatbot\ChatbotBundle::class => ['all' => true],
 ];
 ```
 
-
-
 ### Step 3: Install Assets
-
-Install the bundle's assets to make them publicly accessible:
 
 ```bash
 php bin/console assets:install --symlink
 ```
 
-
-
-This will create the necessary asset files in your `public/bundles/` directory.
+This will publish necessary asset files to the `public/bundles/` directory.
 
 ### Step 4: Create and Run Migrations
 
-Generate migrations for the chatbot database tables:
+Generate and execute the database migrations:
 
 ```bash
 php bin/console make:migration
-```
-
-
-
-Apply the migrations to create the required database tables:
-
-```bash
 php bin/console doctrine:migrations:migrate
 ```
 
-
-
 ### Step 5: Include the Chatbot Widget
 
-Include the chatbot widget in your base template (`templates/base.html.twig`). Add this line after the opening `<body>` tag:
+Include the widget in your base template (`templates/base.html.twig`):
 
 ```twig
-{{ include('@Chatbot/chatbot_widget.html.twig') }}
-```
-
-
-
-Example:
-
-```twig
-<!DOCTYPE html>
-<html>
-<head>
-    <!-- head content -->
-</head>
 <body>
     {{ include('@Chatbot/chatbot_widget.html.twig') }}
-    
-    <!-- rest of your body content -->
+    <!-- Your content -->
 </body>
-</html>
 ```
-### Step 6:  Add Chatbot Routes
-Add the following to your config/routes.yaml:
 
-```twig
+### Step 6: Add Routes
+
+Add the following to `config/routes.yaml`:
+
+```yaml
 chatbot_bundle:
     resource: '@ChatbotBundle/Controller/'
     type: attribute
     prefix: /chatbot
 ```
-### Step 7: Add Configuration File
-Create config/packages/chatbot.yaml to configure role permissions:
-```twig
+
+### Step 7: Add Configuration
+
+Create the file `config/packages/chatbot.yaml`:
+
+```yaml
 chatbot:
-  category_role: ROLE_SUPER_ADMIN
-  faq_role: ROLE_USER
+    role: ROLE_CHATBOT_ADMIN
 ```
 
 ---
 
+### Step 8: User-Submitted Questions
 
+Users can submit their own questions through the chatbot. Admins can respond and choose to publish them in the FAQ. Users receive email notifications when their question is answered.
+
+### Implement `ChatbotUserInterface`
+
+In your user entity (e.g., `Admin`):
+
+```php
+use Chatbot\Security\ChatbotUserInterface;
+use Doctrine\Common\Collections\ArrayCollection;
+
+class Admin implements ChatbotUserInterface
+{
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: UserQuestion::class)]
+    private Collection $questions;
+
+    public function __construct()
+    {
+        $this->questions = new ArrayCollection();
+    }
+
+    public function getQuestions(): Collection
+    {
+        return $this->questions;
+    }
+}
+```
+
+### Step 2: Create a `UserQuestion` Entity
+
+```php
+namespace App\Entity;
+
+use Chatbot\Entity\ChatbotUserQuestion as BaseQuestion;
+use Chatbot\Security\ChatbotUserInterface;
+use Doctrine\ORM\Mapping as ORM;
+
+#[ORM\Entity]
+#[ORM\Table(name: 'chatbot_user_question')]
+class UserQuestion extends BaseQuestion
+{
+    #[ORM\ManyToOne(targetEntity: Admin::class, inversedBy: 'questions')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ChatbotUserInterface $user;
+
+    public function getUser(): ChatbotUserInterface
+    {
+        return $this->user;
+    }
+
+    public function setUser(ChatbotUserInterface $user): static
+    {
+        $this->user = $user;
+        return $this;
+    }
+}
+```
+
+### Step 3: Configure Email Notifications
+
+Set the `FROM_EMAIL` in your `.env`:
+
+```dotenv
+FROM_EMAIL="your@email.com"
+```
+
+---
 
 ## Usage
 
-### Managing Categories
+### Category Management
 
-Navigate to `/chatbot/category` to access the category management interface where you can:
+Visit `/chatbot/category` to:
 
-* **Add new categories**: Create different topic categories for your FAQ
-* **Edit existing categories**: Modify category names
-* **Delete categories**: Remove categories that are no longer needed
+* Add new categories
+* Edit or delete existing ones
 
-### Managing FAQs
+### FAQ Management
 
-Navigate to `/chatbot/faq` to manage your questions and answers:
+Visit `/chatbot/faq` to:
 
-* **Add FAQ items**: Create question-answer pairs for specific categories
-* **Edit FAQ items**: Modify existing questions and answers
-* **Delete FAQ items**: Remove outdated or incorrect information
-* **Organize by category**: Assign each FAQ to a specific category
+* Add new FAQs with answers
+* Edit or remove outdated questions
+* Assign FAQs to categories
 
 ### User Interaction
 
-Once configured, users will see:
-
-1. A chatbot icon/button on the right side of every page
-2. Clicking the button opens the chatbot interface
-3. Users can browse categories to find relevant topics
-4. Select categories to view related FAQ items
-5. Get instant answers to their questions
+* Users click the chatbot button on the website
+* Categories are shown
+* Clicking a category reveals related FAQs
+* Users can ask their own questions
 
 ---
 
-## Template Customization for Category & FAQ Pages
+## Customizing Templates
 
-To customize the templates for the Category and FAQ pages:
+### Step 1: Locate Original Templates
 
-1. **Locate the Original Templates**:
+* `vendor/patel/chatbot-bundle/src/Resources/views/category/`
+* `vendor/patel/chatbot-bundle/src/Resources/views/faq/`
 
-    The original templates are located within the bundle at:
+### Step 2: Create Override Directories
 
-    * `vendor/chatbot/chatbot-bundle/src/Resources/views/category`
-    * `vendor/chatbot/chatbot-bundle/src/Resources/views/faq/`
-
-
-2. **Create Override Directories**:
-   
-    In your Symfony project, create the following directories:
-
-    * `templates/bundles/ChatbotBundle/category/`
-    * `templates/bundles/ChatbotBundle/faq/`
-
-
-3. **Copy and Modify Templates**:
-   Copy the templates you wish to customize from the bundle into the corresponding override directories in your project. For example:
-
-   ```bash
-   cp vendor/chatbot/chatbot-bundle/src/Resources/views/category/index.html.twig templates/bundles/ChatbotBundle/category/index.html.twig
-   cp vendor/chatbot/chatbot-bundle/src/Resources/views/faq/index.html.twig templates/bundles/ChatbotBundle/faq/index.html.twig
-   ```
-
-   You can now modify these copied templates to suit your design and functionality requirements.
-
-4. **Clear Cache**:
-   After overriding templates, clear the Symfony cache to ensure changes take effect:
-
-   ```bash
-   php bin/console cache:clear
-   ```
-
-For more detailed information on overriding bundle templates, refer to the Symfony documentation: ([symfony.com][4]).
-
----
-
-## Routes
-
-The bundle provides the following routes:
-
-| Route Path                   | Route Name                  | Purpose                                |
-|------------------------------|-----------------------------|------------|
-| `/chatbot/category`          | `chatbot_category_index`    | Manage chatbot categories           |
-| `/chatbot/faq`               | `chatbot_faq_index`         | Manage FAQ items           |
-| `/chatbot/widget`            | `chatbot_widget`            |  Render the chatbot widget interface          |
-| `/chatbot/faqs/{categoryid}` | `chatbot_faqs_by_category`  | API endpoint to fetch FAQs by category           |
-
----
-
-## Configuration
-
-### Routes
-
-Ensure that the bundle's routes are properly configured. If not automatically loaded, you can manually import them in your `config/routes.yaml`:
-
-```yaml
-chatbot_bundle:
-   resource: '@ChatbotBundle/Controller/'
-   type: attribute
-   prefix: /chatbot
+```bash
+mkdir -p templates/bundles/ChatbotBundle/category
+mkdir -p templates/bundles/ChatbotBundle/faq
 ```
 
+### Step 3: Copy Templates
 
+```bash
+cp vendor/patel/chatbot-bundle/src/Resources/views/category/index.html.twig templates/bundles/ChatbotBundle/category/
+cp vendor/patel/chatbot-bundle/src/Resources/views/faq/index.html.twig templates/bundles/ChatbotBundle/faq/
+```
 
-### Database Tables
+### Step 4: Clear Cache
 
-The bundle creates two main database tables:
-
-* `chatbot_category` - Stores category information
-* `chatbot_faq` - Stores FAQ items with category relationships
+```bash
+php bin/console cache:clear
+```
 
 ---
 
-## 🔄 Chatbot Bundle Flow
+## Available Routes
 
-This section provides a visual guide and step-by-step explanation of how the Chatbot bundle works, including category/FAQ management and user interaction through the chatbot widget.
+| Path                         | Name                           | Purpose                         |
+| ---------------------------- | ------------------------------ | ------------------------------- |
+| `/chatbot`                   | `chatbot`                      | Chatbot homepage                |
+| `/chatbot/user-questions`    | `chatbot_user_questions_index` | Manage user-submitted questions |
+| `/chatbot/category`          | `chatbot_category_index`       | Manage categories               |
+| `/chatbot/faq`               | `chatbot_faq_index`            | Manage FAQs                     |
+| `/chatbot/widget`            | `chatbot_widget`               | Display chatbot widget          |
+| `/chatbot/faqs/{categoryid}` | `chatbot_faqs_by_category`     | Get FAQs by category (AJAX/API) |
 
-### 1. 📂 Category Management (CRUD)
-Admins can add, edit, or delete categories for organizing FAQ items.
+---
+
+## Flow Diagram
+
+### 1. 📂 Category Management (Admin Panel)
 
 ![Category CRUD](docs/category_crud.png)
 
----
-
-### 2. ❓ FAQ Management (CRUD)
-Admins can manage frequently asked questions and assign them to categories.
+### 2. ❓ FAQ Management (Admin Panel)
 
 ![FAQ CRUD](docs/faq_crud.png)
 
----
+### 3. User Queries Management (Admin Panel)
 
-### 3. 🤖 Chatbot Icon on Website
-Users see a floating chatbot icon at the bottom-right corner of the page.
+![Queries CRUD](docs/user_queries.png)
+
+### 4. 🤖 Chatbot Interface
 
 ![Chatbot Icon](docs/chatbot_icon.png)
-
----
-
-### 4. 📁 Show All Categories
-Clicking the chatbot shows all available categories.
-
 ![Show Categories](docs/show_categories.png)
-
----
-
-### 5. ❓ Show FAQs for Selected Category
-Clicking a category reveals the relevant FAQ items.
-
 ![Show FAQs](docs/category_faqs.png)
+![Show ASK Questions](docs/ask_question.png)
 
 ---
 
@@ -269,11 +252,14 @@ Clicking a category reveals the relevant FAQ items.
 
 ### Styling
 
-You can customize the chatbot's appearance by overriding the default styles. The bundle uses standard CSS classes that you can target in your own stylesheets.
+Override default styles using your own CSS targeting the chatbot’s class names.
 
 ### Templates
 
-To customize the chatbot templates, copy them from the bundle to your `templates/bundles/ChatbotBundle/` directory and modify as needed.
+As explained above, copy templates from the bundle and place them in:
+
+* `templates/bundles/ChatbotBundle/category/`
+* `templates/bundles/ChatbotBundle/faq/`
 
 ---
 
@@ -282,7 +268,7 @@ To customize the chatbot templates, copy them from the bundle to your `templates
 * PHP 8.2 or higher
 * Symfony 6 or higher
 * Doctrine ORM
-* Twig templating engine
+* Twig
 
 ---
 
@@ -290,46 +276,44 @@ To customize the chatbot templates, copy them from the bundle to your `templates
 
 ### Assets Not Loading
 
-If the chatbot assets are not loading properly:
+* Run `php bin/console assets:install --symlink`
+* Check `public/bundles/chatbot/` exists
+* Ensure proper file permissions
 
-1. Ensure you've run `php bin/console assets:install --symlink`
-2. Check that the `public/bundles/chatbot/` directory exists
-3. Verify your web server has permission to access the assets
+### Database Errors
 
-### Database Issues
+* Verify DB configuration
+* Run: `php bin/console doctrine:schema:validate`
+* Run: `php bin/console cache:clear`
 
-If you encounter database-related errors:
+### Twig Template Errors
 
-1. Ensure your database connection is properly configured
-2. Run `php bin/console doctrine:schema:validate` to check for issues
-3. Clear the cache with `php bin/console cache:clear`
-
-### Template Not Found
-
-If Twig templates are not found:
-
-1. Verify the Twig configuration in `config/packages/twig.yaml`
-2. Check that the bundle is properly registered in `config/bundles.php`
-3. Clear the Twig cache
+* Check `twig.yaml` is correctly set up
+* Verify `config/bundles.php` includes the bundle
+* Clear the Twig cache
 
 ---
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit pull requests or open issues for bugs and feature requests.
+We welcome contributions! Feel free to open issues or submit pull requests for new features or bug fixes.
 
 ---
 
 ## License
 
-This bundle is released under the MIT License. See the LICENSE file for details.
+This bundle is open-source and licensed under the MIT License.
 
 ---
 
 ## Support
 
-For support and questions, please open an issue on the project repository or contact the development team.
+If you need help or have questions, feel free to open an issue on GitHub or contact the development team.
 
 ---
 
 **Happy chatting! 🤖**
+
+---
+
+Let me know if you’d like this saved as a `README.md` file or if you need a GitHub-friendly markdown version with proper links.

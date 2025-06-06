@@ -5,7 +5,6 @@ namespace Chatbot\Controller;
 use Chatbot\Entity\ChatbotFaq;
 use Chatbot\Form\ChatbotFaqType;
 use Chatbot\Repository\ChatbotFaqRepository;
-use Chatbot\Repository\ChatbotUserQuestionRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,20 +19,17 @@ class ChatbotFaqController extends AbstractController
     private ChatbotFaqRepository $chatbotFaqRepository;
     private EntityManagerInterface $em;
     private string $requiredRole;
-    private ChatbotUserQuestionRepository $chatbotUserQuestionRepository;
     private MailerInterface $mailer;
 
     public function __construct(
         ChatbotFaqRepository $chatbotFaqRepository,
         EntityManagerInterface $em,
         string $requiredRole,
-        ChatbotUserQuestionRepository $chatbotUserQuestionRepository,
         MailerInterface $mailer
     ){
         $this->chatbotFaqRepository = $chatbotFaqRepository;
         $this->em = $em;
         $this->requiredRole = $requiredRole;
-        $this->chatbotUserQuestionRepository = $chatbotUserQuestionRepository;
         $this->mailer = $mailer;
     }
     #[Route('/', name: 'chatbot_faq_index')]
@@ -76,8 +72,9 @@ class ChatbotFaqController extends AbstractController
 
                     // Send email to the user
                     if ($user && method_exists($user, 'getEmail')) {
+                        $fromEmail = $_ENV['FROM_EMAIL'];
                         $email = (new Email())
-                            ->from('noreply@example.com')
+                            ->from($fromEmail)
                             ->to($user->getEmail())
                             ->subject('We’ve added your question to our FAQ')
                             ->html(sprintf(
@@ -87,8 +84,6 @@ class ChatbotFaqController extends AbstractController
 
                         $this->mailer->send($email);
                     }
-
-                    $this->addFlash('success', 'FAQ created successfully and user question has been removed.');
                 } else {
                     $this->addFlash('success', 'FAQ created successfully.');
                 }
