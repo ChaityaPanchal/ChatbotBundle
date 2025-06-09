@@ -123,7 +123,7 @@ class Admin implements ChatbotUserInterface
 }
 ```
 
-### Step 2: Create a `UserQuestion` Entity
+###  Create a `UserQuestion` Entity
 
 ```php
 namespace App\Entity;
@@ -153,7 +153,7 @@ class UserQuestion extends BaseQuestion
 }
 ```
 
-### Step 3: Configure Email Notifications
+###  Configure Email Notifications
 
 Set the `FROM_EMAIL` in your `.env`:
 
